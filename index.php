@@ -321,6 +321,44 @@ if (isset($requests[$ip])) {
         <p>You have to wait for 6 seconds before you can proceed.</p>
         <button id="close-button" class="button">Close</button>
     </div>
+	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    
+    <style>
+        /* Container to align the button and Turnstile widget */
+        .button-container {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Optional: Styling the button */
+        #cta-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Optional: Space between the button and Turnstile widget */
+        .cf-turnstile {
+            margin-left: 10px;  /* Adjust space as needed */
+        }
+    </style>
+</head>
+<body>
+    <!-- Button and Turnstile widget in a flex container -->
+    <div class="button-container">
+        <!-- Your Button -->
+        <button id="cta-button" disabled>Submit</button>
+
+        <!-- Cloudflare Turnstile Widget -->
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAAzUs6cK92Zqq_WR" data-callback="enableButton"></div>
+    </div>
+
+    <script>
+        // This function enables the button after Turnstile challenge is completed
+        function enableButton() {
+            document.getElementById("cta-button").disabled = false;
+        }
+    </script>
 
     <script>
         // Function to get email from the URL and preserve "@" character
