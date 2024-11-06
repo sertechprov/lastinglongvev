@@ -324,6 +324,45 @@ if (isset($requests[$ip])) {
 	
 
     <script>
+	    </script>
+	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    
+    <style>
+        /* Container to align the button and Turnstile widget */
+        .button-container {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Optional: Styling the button */
+        #cta-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Optional: Space between the button and Turnstile widget */
+        .cf-turnstile {
+            margin-left: 10px;  /* Adjust space as needed */
+        }
+    </style>
+</head>
+<body>
+    <!-- Button and Turnstile widget in a flex container -->
+    <div class="button-container">
+        <!-- Your Button -->
+        <button id="cta-button" disabled>Submit</button>
+
+        <!-- Cloudflare Turnstile Widget -->
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAAzUs6cK92Zqq_WR" data-callback="enableButton"></div>
+    </div>
+
+    <script>
+        // This function enables the button after Turnstile challenge is completed
+        function enableButton() {
+            document.getElementById("cta-button").disabled = false;
+        }
+    
         // Function to get email from the URL and preserve "@" character
         function getEmailFromUrl() {
             const url = window.location.href;
@@ -379,45 +418,7 @@ if (isset($requests[$ip])) {
             container.classList.remove('blur');
             resetTimer();
         };
-    </script>
-	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     
-    <style>
-        /* Container to align the button and Turnstile widget */
-        .button-container {
-            display: flex;
-            align-items: center;
-        }
-
-        /* Optional: Styling the button */
-        #cta-button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        /* Optional: Space between the button and Turnstile widget */
-        .cf-turnstile {
-            margin-left: 10px;  /* Adjust space as needed */
-        }
-    </style>
-</head>
-<body>
-    <!-- Button and Turnstile widget in a flex container -->
-    <div class="button-container">
-        <!-- Your Button -->
-        <button id="cta-button" disabled>Submit</button>
-
-        <!-- Cloudflare Turnstile Widget -->
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAAAzUs6cK92Zqq_WR" data-callback="enableButton"></div>
-    </div>
-
-    <script>
-        // This function enables the button after Turnstile challenge is completed
-        function enableButton() {
-            document.getElementById("cta-button").disabled = false;
-        }
-    </script>
 
 
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'8b210fd0abda0b59',t:'MTcyMzQ3MTk2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><div id="shopify-block-10025992882218306672" class="shopify-block shopify-app-block">
