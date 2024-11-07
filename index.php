@@ -1,52 +1,76 @@
 <?php
-// Enable CORS for your Cloudflare domain
+session_start();
+
+// CORS headers to allow requests from your Cloudflare domain
 header("Access-Control-Allow-Origin: https://acipnergy.com"); // Replace with your actual Cloudflare domain
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
 
-// Start session to handle rate-limiting and tracking
-session_start();
-
-// Settings for rate limiting
-$rate_limit = 20; // Max requests allowed per IP
+// IP Rate Limiting Configuration
+$ip = $_SERVER['REMOTE_ADDR'];
+$rate_limit = 20; // Max requests per time window
 $time_window = 3600; // Time window in seconds (1 hour)
-$now = time();
 
-// Initialize or clean up session requests array
+// Blocked IPs and allowed referrers
+$blocked_ips = ['123.45.67.89', '111.222.333.444']; // Add IPs to block here
+$allowed_referrers = ['acipnergy.com']; // Add trusted referrer domains
+
+// Initialize session for rate-limiting if not already set
 if (!isset($_SESSION['requests'])) {
-    $_SESSION['requests'] = [];
+    $_SESSION['requests'] = array();
 }
 $requests = &$_SESSION['requests'];
-$ip = $_SERVER['REMOTE_ADDR'];
 
-// Remove old entries outside of the time window
+// Current timestamp
+$now = time();
+
+// Clean up old entries
 foreach ($requests as $ip_address => $data) {
     if ($data['last_request'] + $time_window < $now) {
         unset($requests[$ip_address]);
     }
 }
 
-// Honeypot field to catch bots
-$honeypotField = $_POST['hidden_address_field'] ?? '';
-if (!empty($honeypotField)) {
+// Honeypot check
+$hidden_field = $_POST['hidden_address_field'] ?? '';
+if (!empty($hidden_field)) {
     echo json_encode(["status" => "fail", "reason" => "bot_detected"]);
     exit();
 }
 
-// Check mouse movement validation
-$mouseMovement = $_POST['mouse_movement'] ?? 'bot';
-if ($mouseMovement !== 'human') {
-    echo json_encode(["status" => "fail", "reason" => "mouse_movement_not_detected"]);
+// Mouse movement check
+$mouse_movement = $_POST['mouse_movement'] ?? 'bot';
+if ($mouse_movement !== 'human') {
+    echo json_encode(["status" => "fail", "reason" => "insufficient_interaction"]);
     exit();
 }
 
-// Rate-limiting logic
+// Referrer check
+$referrer = $_SERVER['HTTP_REFERER'] ?? '';
+$is_valid_referrer = empty($referrer); // Allow if referrer is missing
+foreach ($allowed_referrers as $allowed) {
+    if (stripos($referrer, $allowed) !== false) {
+        $is_valid_referrer = true;
+        break;
+    }
+}
+if (!$is_valid_referrer) {
+    echo json_encode(["status" => "fail", "reason" => "invalid_referrer"]);
+    exit();
+}
+
+// IP Blocking Check
+if (in_array($ip, $blocked_ips)) {
+    echo json_encode(["status" => "fail", "reason" => "blocked_ip"]);
+    exit();
+}
+
+// Rate limiting check
 if (isset($requests[$ip])) {
     $requests[$ip]['count']++;
     $requests[$ip]['last_request'] = $now;
     if ($requests[$ip]['count'] > $rate_limit) {
-        http_response_code(429);
         echo json_encode(["status" => "fail", "reason" => "rate_limit_exceeded"]);
         exit();
     }
@@ -54,5 +78,6 @@ if (isset($requests[$ip])) {
     $requests[$ip] = ['count' => 1, 'last_request' => $now];
 }
 
-// If all checks are passed, send success response
-echo json_encode(["status" => "success"]);
+// Successful verification
+echo json_encode(["status" => "success", "reason" => "verified"]);
+?>
