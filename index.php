@@ -1,56 +1,52 @@
 <?php
+// Enable CORS for your Cloudflare domain
+header("Access-Control-Allow-Origin: https://acipnergy.com"); // Replace with your actual Cloudflare domain
+header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Headers: Content-Type");
+header("Content-Type: application/json");
+
+// Start session to handle rate-limiting and tracking
 session_start();
 
-header('Content-Type: application/json'); // Ensure JSON response for AJAX requests
+// Settings for rate limiting
+$rate_limit = 20; // Max requests allowed per IP
+$time_window = 3600; // Time window in seconds (1 hour)
+$now = time();
 
-$ip = $_SERVER['REMOTE_ADDR'];
-$rate_limit = 20; // Maximum requests
-$time_window = 60 * 60; // 1 hour in seconds
-
-// Session requests array initialization
+// Initialize or clean up session requests array
 if (!isset($_SESSION['requests'])) {
     $_SESSION['requests'] = [];
 }
-
 $requests = &$_SESSION['requests'];
-$now = time();
+$ip = $_SERVER['REMOTE_ADDR'];
 
-// Clean up old entries
+// Remove old entries outside of the time window
 foreach ($requests as $ip_address => $data) {
     if ($data['last_request'] + $time_window < $now) {
         unset($requests[$ip_address]);
     }
 }
 
-// Honeypot field check
-if (!empty($_POST['hidden_address_field'])) {
+// Honeypot field to catch bots
+$honeypotField = $_POST['hidden_address_field'] ?? '';
+if (!empty($honeypotField)) {
     echo json_encode(["status" => "fail", "reason" => "bot_detected"]);
     exit();
 }
 
-// Mouse movement check
-$mouse_movement = $_POST['mouse_movement'] ?? null;
-if ($mouse_movement !== 'human') {
-    echo json_encode(["status" => "fail", "reason" => "suspicious_activity"]);
+// Check mouse movement validation
+$mouseMovement = $_POST['mouse_movement'] ?? 'bot';
+if ($mouseMovement !== 'human') {
+    echo json_encode(["status" => "fail", "reason" => "mouse_movement_not_detected"]);
     exit();
 }
 
-// User-Agent check
-$user_agent = $_SERVER['HTTP_USER_AGENT'];
-$suspicious_agents = ['bot', 'crawl', 'spider', 'curl', 'wget'];
-foreach ($suspicious_agents as $agent) {
-    if (stripos($user_agent, $agent) !== false) {
-        echo json_encode(["status" => "fail", "reason" => "bot_user_agent_detected"]);
-        exit();
-    }
-}
-
-// Rate limiting check
+// Rate-limiting logic
 if (isset($requests[$ip])) {
     $requests[$ip]['count']++;
     $requests[$ip]['last_request'] = $now;
-
     if ($requests[$ip]['count'] > $rate_limit) {
+        http_response_code(429);
         echo json_encode(["status" => "fail", "reason" => "rate_limit_exceeded"]);
         exit();
     }
@@ -58,6 +54,5 @@ if (isset($requests[$ip])) {
     $requests[$ip] = ['count' => 1, 'last_request' => $now];
 }
 
-// If all checks pass
+// If all checks are passed, send success response
 echo json_encode(["status" => "success"]);
-exit();
