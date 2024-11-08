@@ -9,8 +9,8 @@ header("Content-Type: application/json");
 
 // IP Rate Limiting Configuration
 $ip = $_SERVER['REMOTE_ADDR'];
-$rate_limit = 20; // Max requests per time window
-$time_window = 3600; // Time window in seconds (1 hour)
+$rate_limit = 10; // Max requests per time window
+$time_window = 900; // Time window in seconds (1 hour)
 
 // Blocked IPs and allowed referrers
 $blocked_ips = ['123.45.67.89', '111.222.333.444']; // Add IPs to block here
